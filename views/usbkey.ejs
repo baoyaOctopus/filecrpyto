@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>口令验证</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      *{
+        margin: 0;
+        box-sizing: border-box;
+      }
+      html,body{
+        width: 100%;
+        height: 100%;
+      }
+      h2{
+        margin: 20px 0 0 0;
+      }
+      .wrapper{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(255, 192, 203, 0.271);
+      }
+      .container{
+        width: 400px;
+        height: 330px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: white;
+        border-radius: 20px;
+        overflow: hidden;
+      }
+      form{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      button,a{
+        width: 80%;
+        height: 40px;
+        margin: 10px 0;
+        background-color: rgba(0, 0, 255, 0.438);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        line-height: 40px;
+        text-decoration: none;
+        font-size: 16px;
+      }
+      select{
+        width: 75%;
+        height: 40px;
+        color: rgba(0, 0, 255, 0.438);
+        border: 2px solid rgba(0, 0, 255, 0.438);
+        padding: 0 0 0 5px;
+        border-radius: 5px;
+        margin: 0;
+      }
+      select:focus{
+        outline: none;
+        box-shadow: 0 0px 8px rgba(0, 0, 255, 0.438);
+      }
+      input{
+        width: 75%;
+        height: 40px;
+        color: rgba(0, 0, 255, 0.438);
+        border: 2px solid rgba(0, 0, 255, 0.438);
+        padding: 0 0 0 5px;
+        border-radius: 5px;
+      }
+      input:focus{
+        outline: none;
+        box-shadow: 0 0px 8px rgba(0, 0, 255, 0.438);
+      }
+      label{
+        flex: 1;
+        height: 40px;
+        color: rgba(0, 0, 255, 0.438);
+        font-size: 20px;
+        font-weight: bold;
+        text-align:left;
+        line-height: 40px;
+      }
+      .form-group{
+        width: 80%;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <h2>USBKEY登录</h2>
+        <form action="#" method="post">
+          <div class="form-group">
+              <label for="PIN">PIN码:</label>
+              <input type="text" name="PIN" id="PIN" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="ukeySelect">设备:</label>
+            <select id="ukeySelect"></select>
+          </div>
+          <button id="enumDev">枚举设备</button>
+          <button type="submit" id="uploadPubKey">登录</button>
+        </form>
+      </div>
+    </div>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <script>
+      // 枚举设备相关操作
+      let selectDom = document.getElementById("ukeySelect");
+      let enumDevBtn = document.getElementById("enumDev");
+      let privateKey = '';
+      let publicKey = '';
+      let pubkey = '';
+      let randomnum = '';
+      let randomNum = '';
+      let signature = '';
+      let signatue = '';
+      (async function init() {
+        await axios.get('/p2key').then((data)=>{
+          publicKey = data.data.publicKey; 
+          privateKey = data.data.privateKey; 
+        });
+        axios.post('/ecsign',{privatekey:privateKey}).then((data)=>{
+          signatue = data.data.sig; 
+          randomNum = data.data.msg;
+        });
+      })()
+      
+      $('#uploadPubKey').click(async function (e) {
+        e.preventDefault();
+
+        //生成公钥
+        await axios.post("http://127.0.0.1:28081/skf/ukey/pub/export", {
+              name: $('#ukeySelect').val(),
+              pin: $('#PIN').val()
+          }, { timeout: 2000 }).then(({ data }) => {
+            // 调用成功 返回状态码 200，data 中为 16进制编码的SM2签名公钥 和16进制编码的SM2加密公钥。
+            console.log("SM2签名公钥: ", data.sigPub);
+            pubkey = data.sigPub;
+            console.log("SM2加密公钥: ", data.encPub);
+        }).catch((err) => {
+            // 调用失败捕获异常
+            console.log("导出公钥失败： ", err);
+        });
+        //上传公钥、获取随机数
+        await axios.post("/pubkey", {
+            pubkey:pubkey
+          }, { timeout: 2000 }).then(({ data }) => {
+            console.log(data);
+            randomnum = data.randomNum;
+        }).catch((err) => {
+            console.log(err);
+        });
+        
+        //数字签名
+        await axios.post("http://127.0.0.1:28081/skf/ukey/eccSign", {
+            // 待签名数据的Base64编码
+            plaintext: randomnum,
+            name: $('#ukeySelect').val(),
+            pin: $('#PIN').val(),
+          }, { timeout: 2000 }).then(({ data }) => {
+            // 调用成功 返回状态码 200，data 中为 base64编码格式的签名证书和签名值。
+            console.log("签名值：", data.signature);
+            signature = data.signature;
+            console.log("签名证书：", data.cert);
+        }).catch((err) => {
+            // 调用失败捕获异常
+            console.log("ECC签名失败： ", err);
+        });
+        
+        //验签
+        axios.post("/vertifySign", {
+            user: $('#ukeySelect').val(),
+            pubkey:publicKey,
+            randomnum:randomNum,
+            signature:signatue,
+          }, { timeout: 2000 })
+          .then((res)=>{
+            console.log(res);
+            if(res.data.status === 'success'){
+              localStorage.setItem('token', res.data.token);
+              alert('登录成功')
+              window.location.href = '/cryptofile';
+            }else{
+              alert('验签失败!!!');
+            }
+          })
+          .catch((err)=>{
+            console.log(err);
+          });
+      });
+      
+      $('#enumDev').click(function (e) { 
+        e.preventDefault();
+        // 枚举设备
+        axios.get("http://127.0.0.1:28081/skf/ukey/enum", { timeout: 2000 }).then(({ data }) => {
+          data.forEach(ukey => {
+              let option = document.createElement('option');
+              option.value = ukey.sn;
+              option.text = ukey.name;
+              selectDom.add(option);
+          });
+        }).catch((err) => {
+            // 调用失败捕获异常
+            console.log("枚举设备失败： ", err);
+        });
+      });
+    </script>
+  </body>
+</html>

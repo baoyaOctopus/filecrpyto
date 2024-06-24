@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件加解密</title>
+    <link rel="stylesheet" href="css/cryptofile.css">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <h1>加密</h1>
+            <form class="form_crypted" method="post" action="/crypted" enctype="multipart/form-data">
+                <div class="form_line">
+                    <label for="file-input1" class="file-label1">上传文件</label>
+                    <span class="file-name1" id="file-name1">未选择文件</span>
+                    <input type="file" id="file-input1" name="file1" class="file-input1">
+                </div>
+                <div class="form_line">
+                    <p>tips:请输入长度为16的口令,仅支持字母和数字并记住这段口令</p>
+                    <label for="key">口令:</label>
+                    <input type="text" name="key">
+                </div>
+                <div class="form_line">
+                    <input type="submit" value="提交" class="submit">
+                </div>
+            </form>
+        </div>
+        
+        <div class="container">
+            <h1>解密</h1>
+            <form class="form_decrypted" method="post" action="/decrypted" enctype="multipart/form-data">
+                <div class="form_line">
+                    <p>tips:请上传需要解密的文件，仅支持经过sm4加密的文件哦~~</p> 
+                    <label for="file-input2" class="file-label2">上传文件</label>
+                    <span class="file-name2" id="file-name2">未选择文件</span>
+                    <input type="file" id="file-input2" name="file2" class="file-input2">
+                </div>
+                <div class="form_line">
+                    <label for="key">口令:</label>
+                    <input type="text"  name="key">
+                </div>
+                <div class="form_line">
+                    <input type="submit" value="提交" class="submit">
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if(!token){
+            window.location.href='/key';
+        }else{
+            axios.post('/protect',{},{
+                headers: {
+                    'Authorization': token
+                },
+                timeout:2000
+            })
+            .then((res)=>{
+                if(res.data.code === 201){
+                    alert('请检查登录状态！')
+                    window.location.href='/key';
+                }
+            })
+            .catch((err)=>{
+                console.log('err:',err);
+            })
+        }
+        document.getElementById('file-input1').addEventListener('change', function() {
+            console.log(1);
+            var fileName = this.files[0] ? this.files[0].name : '未选择文件';
+            document.getElementById('file-name1').textContent = fileName;
+        });
+        document.getElementById('file-input2').addEventListener('change', function() {
+            console.log(this);
+            var fileName = this.files[0] ? this.files[0].name : '未选择文件';
+            document.getElementById('file-name2').textContent = fileName;
+        });
+    </script>
+</body>
+</html>

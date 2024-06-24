@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>实验三</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      *{
+        margin: 0;
+        box-sizing: border-box;
+      }
+      html,body{
+        width: 100%;
+        height: 100%;
+      }
+      .wrapper{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(255, 192, 203, 0.271);
+      }
+      .container{
+        width: 400px;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: white;
+        border-radius: 20px;
+      }
+      a:not(.beian){
+        width: 80%;
+        height: 40px;
+        margin: 10px 0;
+        background-color: rgba(0, 0, 255, 0.438);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        line-height: 40px;
+        text-decoration: none;
+      }
+      .beian{
+        width: 100vw;
+        text-align: center;
+        font-size: 20px;
+        position: fixed;
+        bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <a href="/key" class="navToKey">口令登录</a>
+        <a href="/email" class="navToEmail">验证码登录</a>
+        <a href="/usbkey" class="navToUsbKey">USBKEY登录</a>
+      </div>
+      <a class="beian" href="https://beian.miit.gov.cn/" target="_blank">浙ICP备2024097159号</a>
+    </div>
+  </body>
+</html>

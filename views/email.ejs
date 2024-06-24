@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>口令验证</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      *{
+        margin: 0;
+        box-sizing: border-box;
+      }
+      html,body{
+        width: 100%;
+        height: 100%;
+      }
+      .wrapper{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(255, 192, 203, 0.271);
+      }
+      .container{
+        width: 400px;
+        height: 330px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: white;
+        border-radius: 20px;
+        overflow: hidden;
+      }
+      form{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      button,a{
+        width: 80%;
+        height: 40px;
+        margin: 10px 0;
+        background-color: rgba(0, 0, 255, 0.438);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        line-height: 40px;
+        text-decoration: none;
+        font-size: 16px;
+      }
+      input{
+        width: 75%;
+        height: 40px;
+        color: rgba(0, 0, 255, 0.438);
+        border: 2px solid rgba(0, 0, 255, 0.438);
+        padding: 0 0 0 5px;
+        border-radius: 5px;
+      }
+      input:focus{
+        outline: none;
+        box-shadow: 0 0px 8px rgba(0, 0, 255, 0.438);
+      }
+      label{
+        flex: 1;
+        height: 40px;
+        color: rgba(0, 0, 255, 0.438);
+        font-size: 20px;
+        font-weight: bold;
+        text-align:left;
+        line-height: 40px;
+      }
+      .form-group{
+        width: 80%;
+        height: 40px;
+        display: flex;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <h2 style="margin: 20px 0 0 0;">短信验证</h2>
+        <form action="/email" method="post">
+            <div class="form-group">
+                <label for="phoneNumber">手机号:</label>
+                <input type="text" name="phoneNumber" id="phoneNumber" autocomplete="off" id="phoneNumber">
+            </div>
+            <div class="form-group">
+                <label for="password">验证码:</label>
+                <input type="text" name="password" autocomplete="off" id="password">
+            </div>
+            <button type="submit" class="Login">Login</button>
+            <a class="sendVertifyCode" href="#">点我发送验证码</a>
+        </form>
+      </div>
+    </div>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <script>
+        $('.Login').click(async function (e) {
+          e.preventDefault();
+
+          await axios.post("/email", {
+              phoneNumber:$('#phoneNumber').val(),
+              password:$('#password').val(),
+            }, { timeout: 2000 }).then(({ data }) => {
+              console.log(data);
+              if(data.msg === '登录成功~~'){
+                localStorage.setItem('token', data.token);
+                alert('登录成功');
+                window.location.href = '/cryptofile'
+              }else if(data.msg === '验证码不正确！！'){
+                alert('验证码不正确！！');
+              }
+          }).catch((err) => {
+              console.log(err);
+          });
+        });
+        $(document).ready(function(){
+            let timer; // 定义定时器变量
+
+            $('.sendVertifyCode').click(function () {
+                const $this = $(this);
+
+                // 禁止默认行为，阻止点击事件
+                event.preventDefault();
+                console.log(1);
+                $this.css({
+                    'background': 'white',
+                    'border': '2px solid rgba(0, 0, 255, 0.438)',
+                    'color': 'rgba(0, 0, 255, 0.438)',
+                    'pointer-events': 'none' // 禁止元素响应鼠标事件
+                }); // 修改样式
+                $this.text('发送成功(60s)'); // 修改文本内容
+
+                let countDown = 60; // 倒计时初始值
+
+                // 启动定时器，每秒更新倒计时文本
+                timer = setInterval(function() {
+                    countDown--;
+                    if (countDown > 0) {
+                        $this.text(`验证码已发送(${countDown}s)`);
+                    } else {
+                        clearInterval(timer); // 清除定时器
+                        $this.css({
+                            'background': 'rgba(0, 0, 255, 0.438)',
+                            'border': 'none',
+                            'color': 'white',
+                            'pointer-events': 'auto' // 恢复元素响应鼠标事件
+                        }); // 恢复样式
+                        $this.text('点我发送验证码'); // 恢复文本内容
+                    }
+                }, 1000);
+                console.log($('#phoneNumber').val());
+                // 发送 POST 请求
+                $.ajax({
+                    url: '/vertifycode', // 请求的 URL，根据实际情况填写
+                    method: 'POST', // 使用 POST 方法
+                    data: { // 请求发送的数据，可以是对象或字符串
+                        phoneNumber:$('#phoneNumber').val()
+                    },
+                    success: function(response) {
+                        console.log('Email sent successfully:', response);
+                        // 这里可以根据需要处理发送成功后的逻辑
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to send email:', error);
+                        // 这里可以根据需要处理发送失败后的逻辑
+                    }
+                });
+            })
+        })
+        
+    </script>
+  </body>
+</html>
