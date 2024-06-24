@@ -31,7 +31,7 @@ function stringToByteArray(str) {
 
 // 初始化
 const client = new UniSMS({
-  accessKeyId: 'RkerFgavMPZMsJUMYjabj3NUbmhchAWxjm7GecgweFxXKZVya',
+  accessKeyId: 'your_accessKeyId',
   // accessKeySecret: 'your access key secret',  // 若使用简易验签模式请删除此行
 })
 
@@ -148,7 +148,7 @@ router.post('/vertifycode', function(req,res,next){
   // 发送短信
   client.send({
     to: req.body.phoneNumber,
-    signature: '梦梦家DIY潮玩',
+    signature: 'your_signature',
     templateId: 'pub_verif_ttl3',
     templateData: {
       code: vertifyCode,
